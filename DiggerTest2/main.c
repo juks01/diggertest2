@@ -96,7 +96,7 @@ int main(int argc, char* argv[]) {
 
 		//input
 		switch (input()) {
-		case 'q': break;
+		case 'q': exit(0); break;
 		default: continue;
 		}
 

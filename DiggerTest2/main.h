@@ -64,11 +64,11 @@ Block blocks[] = {
 
 /* Wall chars
 0: UL
-1: UC
-2: UR
+1: UR
+2: UC
 3: LL
-4: LC
-5: LR
+4: LR
+5: LC
 6: L
 7: R
 */
@@ -120,8 +120,7 @@ typedef struct player {
 4: COORD stats area upper left
 5: COORD stats area lower left
 6: Toggle if header is updated
-7: Toggle if game area is updated
-8: Toggle if stats area is updated
+7: Toggle if stats area is updated
 */
 typedef struct renderer {
 	COORD rendarea_start;

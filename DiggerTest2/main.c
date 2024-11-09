@@ -4,50 +4,92 @@
 #include <stdio.h>
 #include <time.h>
 
-
-static void gen_gamearea() {
-	int num_blocks = sizeof(blocks) / sizeof(blocks[0]);
-	for (int r = 0; r < G_AREA_ROWS; r++)
-		for (int c = 0; c < G_AREA_COLS; c++)
-			gamemap[r][c].block = blocks[random_number(0, num_blocks)];
-}
-
-static void gen_rendarea_borders(Renderer* rend) {
-	int start_x = rend->rendarea_start.X;
-	int start_y = rend->rendarea_start.Y;
-	int end_x = rend->rendarea_end.X;
-	int end_y = rend->rendarea_end.Y;
-	for (int r = start_y; r < end_y; r++)
-		for (int c = start_x; c < end_x; c++)
-			if (r == start_y)            // == The first row ==
-				if (c == start_x)        // Upper left corner
-					rendmap[r][c].block = walls[0];
-				else if (c == end_x -1) // Upper right corner
-					rendmap[r][c].block = walls[2];
-				else                     // Upper center characters
-					rendmap[r][c].block = walls[1];
-			else if (r == end_y - 1)     // == The last row ==
-				if (c == start_x)        // Lower left corner
-					rendmap[r][c].block = walls[3];
-				else if (c == end_x -1) // Lower right corner
-					rendmap[r][c].block = walls[5];
-				else                     // Lower center characters
-					rendmap[r][c].block = walls[4];
-}
-
-static void draw_rendarea_borders(Renderer* rend, HANDLE* hOut) {
-	SetConsoleCursorPosition(hOut, rend->rendarea_start);
-	int start_x = rend->rendarea_start.X;
-	int start_y = rend->rendarea_start.Y;
-	int end_x = rend->rendarea_end.X;
-	int end_y = rend->rendarea_end.Y;
-	for (int r = start_y; r < end_y; r++) {
-		for (int c = start_x; c < end_x; c++) {
-			printf("%c", rendmap[r][c].block.tile);
-		}
-		printf("\n");
+static int rend_upd_header(System* sys, Renderer* rend, Map* map, HANDLE hOut) {
+	SetConsoleCursorPosition(hOut, rend->header_start);
+	printf(" ---=== HEADER ROW ===--- ");
+	if (sys->debug) { // Debug texts
+		COORD start = rend->header_start;
+		start.X += 49;
+		SetConsoleCursorPosition(hOut, start);
+		printf("H-DEBUG: 12345678901234567890");
 	}
+	return 0;
 }
+
+
+static void gen_rendarea(Renderer* rend) {
+	COORD start = rend->rendarea_start;
+	COORD end = rend->rendarea_end;
+	int num_blocks = sizeof(blocks) / sizeof(blocks[0]);
+	for (int r = start.Y; r < end.Y; r++)
+		for (int c = start.X; c < end.X; c++)
+			if (r == start.Y) {          // == The first row ==
+				if (c == start.X)        // Upper left corner
+					rendmap[r][c].block = walls[0];
+				else if (c == end.X - 1) // Upper right corner
+					rendmap[r][c].block = walls[1];
+				else                     // Upper center characters
+					rendmap[r][c].block = walls[2];
+			}
+			else if (r == end.Y - 1) {   // == The last row ==
+				if (c == start.X)        // Lower left corner
+					rendmap[r][c].block = walls[3];
+				else if (c == end.X - 1) // Lower right corner
+					rendmap[r][c].block = walls[4];
+				else                     // Lower center characters
+					rendmap[r][c].block = walls[5];
+			}
+			else {                       // == Rows in the middle
+				if (c == start.X)        // First column
+					rendmap[r][c].block = walls[6];
+				else if (c == end.X - 1) // Last column
+					rendmap[r][c].block = walls[7];
+				else // Game area between borders
+					gamemap[r][c].block = blocks[random_number(0, num_blocks)];
+			}
+}
+
+
+
+static int draw_rendarea(Renderer* rend, HANDLE* hOut) {
+	COORD start = rend->rendarea_start;
+	COORD end = rend->rendarea_end;
+	
+	SetConsoleCursorPosition(hOut, start);
+
+	CONSOLE_SCREEN_BUFFER_INFO consoleInfo;
+	WORD saved_attributes;
+	/* Save current attributes */
+	GetConsoleScreenBufferInfo(hOut, &consoleInfo);
+	saved_attributes = consoleInfo.wAttributes;
+
+	COORD pos;
+	for (pos.Y = start.Y; pos.Y < end.Y; pos.Y++) {
+		for (pos.X = start.X; pos.X < end.X; pos.X++) {
+			SetConsoleCursorPosition(hOut, pos);
+			if (pos.Y == start.Y || pos.Y == end.Y - 1 ||
+				pos.X == start.X || pos.X == end.X - 1)
+				printf("%c", rendmap[pos.Y][pos.X].block.tile);
+			else {
+				if (gamemap[pos.Y][pos.X].block.tile == CHAR_GRASS) {
+					SetConsoleTextAttribute(hOut, FOREGROUND_GREEN);
+					printf("%c", gamemap[pos.Y][pos.X].block.tile);
+					SetConsoleTextAttribute(hOut, saved_attributes);
+				}
+				else if (gamemap[pos.Y][pos.X].block.tile == BL_BLOCKING) {
+					SetConsoleTextAttribute(hOut, FOREGROUND_INTENSITY);
+					printf("%c", gamemap[pos.Y][pos.X].block.tile);
+					SetConsoleTextAttribute(hOut, saved_attributes);
+				}
+				else
+					printf("%c", gamemap[pos.Y][pos.X].block.tile);
+			}
+		}
+	}
+	return 0;
+}
+
+
 
 static int init(System* sys, Renderer* rend, Player* plr) {
 	sys->debug = SYS_DEBUG;
@@ -62,17 +104,16 @@ static int init(System* sys, Renderer* rend, Player* plr) {
 	rend->header_start.Y = 0;
 	rend->header_end.X = REN_COLS;
 	rend->header_end.Y = REN_HEADER_ROWS;
-	rend->gamearea_start.X = rend->rendarea_start.X +1;
-	rend->gamearea_start.Y = rend->rendarea_start.Y +1;
-	rend->gamearea_end.X = rend->rendarea_end.X - 1;
-	rend->gamearea_end.Y = rend->rendarea_end.X - 1;
+	rend->gamearea_start.X = rend->rendarea_start.X +2;
+	rend->gamearea_start.Y = rend->rendarea_start.Y +2;
+	rend->gamearea_end.X = rend->rendarea_end.X - 2;
+	rend->gamearea_end.Y = rend->rendarea_end.X - 2;
 	rend->statsarea_start.X = 0;
 	rend->statsarea_start.Y = REN_HEADER_ROWS + REN_ROWS;
 	rend->statsarea_end.X = REN_COLS;
 	rend->statsarea_end.Y = REN_HEADER_ROWS + REN_ROWS + REN_STATS_ROWS;
 	rend->upd_rendarea = 1;
 	rend->upd_header = 1;
-	rend->upd_gamearea = 1;
 	rend->upd_stats = 1;
 
 	plr->name = "Player";
@@ -96,9 +137,8 @@ static int init(System* sys, Renderer* rend, Player* plr) {
 	SetConsoleCursorInfo(hOut, &cur);
 
 	// Generate random map
-	gen_gamearea();
-	// Generate game area borders
-	gen_rendarea_borders(rend);
+	gen_rendarea(rend);
+
 
 	return 0;
 }
@@ -113,66 +153,24 @@ static char input() {
 
 
 
-static int update() {
+static int update(System* sys, Renderer* rend, Map* map, Player* plr) {
+	HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+	if (rend->upd_header)
+		rend->upd_header = rend_upd_header(sys, rend, map, hOut);
+	if (rend->upd_stats)
+		rend->upd_stats = rend_upd_stats(sys, rend, plr, hOut);
+	return 0;
+}
 
+static int renderer(System* sys, Renderer* rend, Map* map, Player* plr) {
+	HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+	if (rend->upd_rendarea)
+		rend->upd_rendarea = draw_rendarea(rend, hOut);
 	return 0;
 }
 
 
 
-static int rend_upd_header(System* sys, Renderer* rend, HANDLE hOut) {
-	if (sys->debug) {
-		// Debug texts
-		COORD cd = rend->header_start;
-		cd.X += 49;
-		SetConsoleCursorPosition(hOut, cd);
-		printf("H-DEBUG: 12345678901234567890");
-	}
-	SetConsoleCursorPosition(hOut, rend->header_start);
-	printf(" ---=== HEADER ROW ===--- ");
-	return 0;
-}
-
-static int rend_upd_gamearea(Renderer* rend, HANDLE hOut) {
-	int start_x = rend->rendarea_start.X;
-	int start_y = rend->rendarea_start.Y;
-	int end_x = rend->rendarea_end.X;
-	int end_y = rend->rendarea_end.Y;
-
-	// Print visible part of map
-	CONSOLE_SCREEN_BUFFER_INFO consoleInfo;
-	WORD saved_attributes;
-	/* Save current attributes */
-	GetConsoleScreenBufferInfo(hOut, &consoleInfo);
-	saved_attributes = consoleInfo.wAttributes;
-
-	SetConsoleCursorPosition(hOut, rend->rendarea_start);
-	for (int r = start_y; r < end_y; r++) {
-		for (int c = start_x; c < end_x; c++) {
-			if (gamemap[r][c].block.tile == CHAR_GRASS) {
-				SetConsoleTextAttribute(hOut, FOREGROUND_GREEN);
-				printf("%c", gamemap[r][c].block.tile);
-				SetConsoleTextAttribute(hOut, saved_attributes);
-			}
-			else if (gamemap[r][c].block.tile == BL_BLOCKING) {
-				SetConsoleTextAttribute(hOut, FOREGROUND_INTENSITY);
-				printf("%c", gamemap[r][c].block.tile);
-				SetConsoleTextAttribute(hOut, saved_attributes);
-			}
-			else
-				printf("%c", gamemap[r][c].block.tile);
-		}
-		printf("\n");
-	}
-	return 0;
-}
-
-static int upd_rend_gamearea_borders(Renderer* rend, HANDLE hOut) {
-	gen_rendarea_borders(rend);
-	draw_rendarea_borders(rend, hOut);
-	// Print the borders?
-	return 0;
-}
 
 
 static int rend_upd_stats(System* sys, Renderer* rend, Player* plr, HANDLE hOut) {
@@ -188,23 +186,10 @@ static int rend_upd_stats(System* sys, Renderer* rend, Player* plr, HANDLE hOut)
 	}
 
 	SetConsoleCursorPosition(hOut, rend->statsarea_start);
-	int atk = plr->atkbase + plr->atkboost;
-	int def = plr->defbase + plr->defboost;
+	int atk = plr->atkbase + plr->atkboost; // Total Atk
+	int def = plr->defbase + plr->defboost; // Total Def
 	printf(" HP: %d\n", plr->health);
 	printf("Atk: %d   Def: %d", atk, def);
-	return 0;
-}
-
-static int renderer(System* sys, Renderer* rend, Player* plr) {
-	HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
-	if (rend->upd_header)
-		rend->upd_header = rend_upd_header(sys, rend, hOut);
-	if (rend->upd_rendarea)
-		rend->upd_rendarea = rend_upd_gamearea(rend, hOut);
-	if (rend->upd_gamearea)
-		rend->upd_gamearea = upd_rend_gamearea_borders(rend, hOut);
-	if (rend->upd_stats)
-		rend->upd_stats = rend_upd_stats(sys, rend, plr, hOut);
 	return 0;
 }
 
@@ -212,7 +197,7 @@ static int renderer(System* sys, Renderer* rend, Player* plr) {
 
 int main(int argc, char* argv[]) {
 
-	//init
+	// Initialization
 	System sys;
 	System* psys = &sys;
 	Renderer rend;
@@ -222,8 +207,8 @@ int main(int argc, char* argv[]) {
 	Player plr;
 	Player* pplr = &plr;
 	int ret_init = 0, ret_update = 0, ret_renderer = 0;
-	
 	ret_init = init(psys, prend, pplr);
+
 
 	// THE MAIN LOOP
 	int cycles = 0;
@@ -234,22 +219,18 @@ int main(int argc, char* argv[]) {
 		else
 			cycles = 0;
 
-		// printf("Cycles: %d\n", cycles);
-
-
 		//input
 		switch (input()) {
 		case 'q': exit(0); break;
-		//default: continue;
 		}
 
 
 		//update
-			ret_update = update();
+			ret_update = update(psys, prend, pmap, pplr);
 
 
 		//renderer
-			ret_renderer = renderer(psys, prend, pplr);
+			ret_renderer = renderer(psys, prend, pmap, pplr);
 
 
 	} // END OF MAIN LOOP

@@ -2,7 +2,7 @@
 
 #include <windows.h>
 
-#define SYS_CYCLES 20
+#define SYS_CYCLES 500
 #define SYS_DEBUG 1
 
 #define REN_HEADER_ROWS 1
@@ -24,11 +24,11 @@
 #define CHAR_HEY_HIGH 178
 #define CHAR_ROCK 254
 #define CHAR_FRAME_UL 218   // Frame char of upper left corner
-#define CHAR_FRAME_UC 196   // Frame char of upper horizontal line
 #define CHAR_FRAME_UR 183   // Frame char of upper right corner
+#define CHAR_FRAME_UC 196   // Frame char of upper horizontal line
 #define CHAR_FRAME_LL 212   // Frame char of lower left corner
-#define CHAR_FRAME_LC 205   // Frame char of lower horizontal line
 #define CHAR_FRAME_LR 188   // Frame char of lower right corner
+#define CHAR_FRAME_LC 205   // Frame char of lower horizontal line
 #define CHAR_FRAME_L  179   // Frame char of left vertical line
 #define CHAR_FRAME_R  186   // Frame char of right vertical line
 
@@ -74,11 +74,11 @@ Block blocks[] = {
 */
 Block walls[] = {
 	{ CHAR_FRAME_UL, BL_BLOCKING },
-	{ CHAR_FRAME_UC, BL_BLOCKING },
 	{ CHAR_FRAME_UR, BL_BLOCKING },
+	{ CHAR_FRAME_UC, BL_BLOCKING },
 	{ CHAR_FRAME_LL, BL_BLOCKING },
-	{ CHAR_FRAME_LC, BL_BLOCKING },
 	{ CHAR_FRAME_LR, BL_BLOCKING },
+	{ CHAR_FRAME_LC, BL_BLOCKING },
 	{ CHAR_FRAME_L, BL_BLOCKING },
 	{ CHAR_FRAME_R, BL_BLOCKING },
 };
@@ -134,7 +134,6 @@ typedef struct renderer {
 	COORD statsarea_end;
 	char upd_rendarea;
 	char upd_header;
-	char upd_gamearea;
 	char upd_stats;
 } Renderer;
 

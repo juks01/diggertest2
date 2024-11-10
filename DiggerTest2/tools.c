@@ -1,8 +1,14 @@
 #include "tools.h"
 
 int random_number(int min, int max) {
-	srand(time(NULL));
-	return (rand() % (max - min + 1)) + min;
+    srand(time(NULL));
+    // Switch min<->max if needed
+    if (max < min) {
+        int temp = max;
+        max = min;
+        min = temp;
+    }
+    return min + rand() % (max - min + 1);
 }
 
 

@@ -102,9 +102,10 @@ typedef struct player {
 	unsigned char dir;    // Player direction
 	unsigned char marker; // Player "icon"
 
-	unsigned int level; // Player level
-	unsigned int exp;   // Player experience
-	int health;         // Player health
+	unsigned int level;   // Player level
+	unsigned int exp;     // Player experience
+	int health;           // Player health
+	int health_max;       // Player max health
 
 	int atkbase;  // Attack points
 	int atkboost; // Attack boost points

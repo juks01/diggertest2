@@ -142,6 +142,7 @@ typedef struct renderer {
 	char upd_gamearea;
 	char upd_header;
 	char upd_stats;
+	char upd_debug;
 } Renderer;
 
 

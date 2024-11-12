@@ -19,8 +19,7 @@ static void gen_rendarea(Renderer* rend) {
 	COORD start = rend->rendarea_start;
 	COORD end = rend->rendarea_end;
 	COORD pos;
-	unsigned char header[] =
-		"---=== HEADER ROW ===---                         H-DEBUG: 12345678901234567890";
+	unsigned char header[REN_COLS] = "---=== HEADER ROW ===---";
 
 	for (pos.Y = 0; pos.Y < end.Y; pos.Y++) {
 		for (pos.X = 0; pos.X < end.X; pos.X++)
@@ -110,6 +109,89 @@ static int draw_rendarea(Renderer* rend, HANDLE* hOut) {
 
 
 
+static void moveplayer(Renderer* rend, Player* plr, HANDLE hOut, int key) {
+	COORD Position = plr->Position;
+	COORD PositionOld = plr->PositionOld;
+	unsigned char marker = "@";
+	//int newpos_x = plr->Position.X, newpos_y = plr->Position.Y;
+
+	switch (plr->dir) {
+	case 1: { // Trying to go up
+		if (plr->Position.Y > 2) {
+			plr->PositionOld.Y = plr->Position.Y;
+			/*
+			int* newpos_y = &plr.Position.Y;
+			--(*newpos_y);
+			*/
+			(plr->Position.Y)--;
+			char marker = "^";
+		}
+		break;
+	}
+	case 2: { // Trying to go right
+		if (plr->Position.X > rend->rendarea_end.X) {
+			plr->PositionOld.X = plr->Position.X;
+			/*
+			int* newpos_x = &plr.Position.X;
+			++(*newpos_x);
+			*/
+			(plr->Position.X)++;
+			char marker = ">";
+		}
+		break;
+	}
+	case 3: { // Trying to go down
+		if (plr->Position.Y < rend->rendarea_end.Y) {
+			plr->PositionOld.Y = plr->Position.Y;
+			/*
+			int* newpos_y = &plr.Position.Y;
+			++(*newpos_y);
+			*/
+			plr->Position.Y++;
+			char marker = "v";
+		}
+		break;
+	}
+	case 4: { // Trying to go left
+		if (plr->Position.X > 2) {
+			plr->PositionOld.X = plr->Position.X;
+			/*
+			int* newpos_x = &plr.Position.X;
+			--(*newpos_x);
+			*/
+			plr->Position.X--;
+			char marker = "<";
+		}
+		break;
+	}
+	default: printf("\n UNKNOWN DIRECTION ");
+	}
+
+	// Update player info
+	//plr.Position.X = newpos_x;
+	//plr.Position.Y = newpos_y;
+	Position.X = plr->Position.X;
+	Position.Y = plr->Position.Y;
+	PositionOld.X = plr->PositionOld.X;
+	PositionOld.Y = plr->PositionOld.Y;
+	//unsigned char* mrk = &marker;
+	plr->marker = marker;
+	//strcpy_s(plr.marker, sizeof(marker), mrk);
+
+	// Print player marker to map
+	SetConsoleCursorPosition(hOut, Position);
+	printf("%c", marker);
+
+	// Update character in player old position from map
+	if (!(plr->Position.Y == plr->PositionOld.Y &&
+		plr->Position.X == plr->PositionOld.X)) {
+		SetConsoleCursorPosition(hOut, PositionOld);
+		printf("%c", gamemap[plr->PositionOld.Y][plr->PositionOld.X].block.tile);
+	}
+}
+
+
+
 static int init(System* sys, Renderer* rend, Player* plr, HANDLE* hOut) {
 	srand((unsigned)time(0));
 	
@@ -170,8 +252,6 @@ static int init(System* sys, Renderer* rend, Player* plr, HANDLE* hOut) {
 static char input() {
 	if (_kbhit())
 		return _getch();
-	else
-		return NULL;
 }
 
 
@@ -189,11 +269,27 @@ static int update(System* sys, Renderer* rend, Map* map, Player* plr, HANDLE hOu
 	return 0;
 }
 
+
+void draw_debug(System* sys, Renderer* rend, Map* map, Player* plr, HANDLE hOut) {
+	COORD posD1, posD2, posD3;
+	posD1.Y = 0;
+	posD1.X = 40;
+	posD2.Y = REN_ROWS + 1;
+	posD2.X = 49;
+	posD3.Y = REN_ROWS + 2;
+	posD3.X = 49;
+	SetConsoleCursorPosition(hOut, posD1);
+	printf("Pos: %d.%d", plr->Position.Y, plr->Position.X);
+}
+
+
 static int renderer(System* sys, Renderer* rend, Map* map, Player* plr, HANDLE hOut) {
 	if (rend->upd_rendarea)
 		rend->upd_rendarea = draw_rendarea(rend, hOut);
 	if (rend->upd_gamearea)
 		rend->upd_gamearea = draw_gamearea(rend, hOut);
+	if (rend->upd_debug)
+		draw_debug(sys, rend, map, plr, hOut);
 	return 0;
 }
 
@@ -216,8 +312,10 @@ static int rend_upd_stats(System* sys, Renderer* rend, Player* plr, HANDLE* hOut
 	printf(" HP: %d/%d          Lvl: %d   Exp: %d/%d\n",
 		plr->health, plr->health_max, plr->level, plr->exp, plr->exp_next);
 	printf("Atk: %d   Def: %d", atk, def);
+
 	return 0;
 }
+
 
 
 
@@ -248,7 +346,12 @@ int main(int argc, char* argv[]) {
 
 
 		//input
+		int key = 0;
 		switch (input()) {
+		case 'w': moveplayer(prend, pplr, hOut, 1);  break;
+		case 'a': moveplayer(prend, pplr, hOut, 4);  break;
+		case 's': moveplayer(prend, pplr, hOut, 3);  break;
+		case 'd': moveplayer(prend, pplr, hOut, 2);  break;
 		case 'q': exit(0); break;
 		
 		// Just for testing...

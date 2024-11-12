@@ -2,7 +2,7 @@
 
 #include <windows.h>
 
-#define SYS_CYCLES 500
+#define SYS_CYCLES 20
 #define SYS_DEBUG 1
 
 #define REN_HEADER_ROWS 1
@@ -96,16 +96,17 @@ Map rendmap[REN_ROWS][REN_COLS];
 
 
 typedef struct player {
-	unsigned char name;   // Player name
-	COORD Position;       // Player current position
-	COORD PositionOld;    // Player old position
-	unsigned char dir;    // Player direction
-	unsigned char marker; // Player "icon"
+	unsigned char name;    // Player name
+	COORD Position;        // Player current position
+	COORD PositionOld;     // Player old position
+	unsigned char dir;     // Player direction
+	unsigned char marker;  // Player "icon"
 
-	unsigned int level;   // Player level
-	unsigned int exp;     // Player experience
-	int health;           // Player health
-	int health_max;       // Player max health
+	unsigned int level;    // Player level
+	unsigned int exp;      // Player experience
+	unsigned int exp_next; // Player exp to next level
+	int health;            // Player health
+	int health_max;        // Player max health
 
 	int atkbase;  // Attack points
 	int atkboost; // Attack boost points
@@ -133,6 +134,7 @@ typedef struct renderer {
 	COORD statsarea_start;
 	COORD statsarea_end;
 	char upd_rendarea;
+	char upd_gamearea;
 	char upd_header;
 	char upd_stats;
 } Renderer;

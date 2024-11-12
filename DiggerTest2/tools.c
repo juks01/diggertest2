@@ -1,20 +1,18 @@
 #include "tools.h"
 
-int random_number(int min, int max) {
-    srand(time(NULL));
-    // Switch min<->max if needed
-    if (max < min) {
+extern int random_number(int min, int max) {
+    if (max < min) { // Switch min<->max if needed
         int temp = max;
         max = min;
         min = temp;
     }
-    return min + rand() % (max - min + 1);
+    return rand() % (max - min + 1) + min;
 }
 
 
 
 // Function to sleep for milliseconds
-void sleep_ms(int milliseconds) { // cross-platform sleep function
+extern void sleep_ms(int milliseconds) { // cross-platform sleep function
 #ifdef WIN32
     Sleep(milliseconds);
 #elif _POSIX_C_SOURCE >= 199309L

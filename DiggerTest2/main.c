@@ -13,6 +13,7 @@ static void gen_gamearea(Renderer* rend) {
 	for (pos.Y = 0; pos.Y < end.Y; pos.Y++) {
 		for (pos.X = 0; pos.X < end.X; pos.X++)
 			gamemap[pos.Y][pos.X].block = blocks[random_number(0, num_blocks)];
+			//gamemap[pos.Y][pos.X].block = blocks[rand() % 7] ;
 	}
 }
 
@@ -112,6 +113,8 @@ static int draw_rendarea(Renderer* rend, HANDLE* hOut) {
 
 
 static int init(System* sys, Renderer* rend, Player* plr, HANDLE* hOut) {
+	srand((unsigned)time(0));
+	
 	sys->debug = SYS_DEBUG;
 	sys->show_fps = 1;
 	sys->show_frames = 1;

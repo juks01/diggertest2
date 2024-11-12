@@ -10,11 +10,9 @@ static void gen_gamearea(Renderer* rend) {
 	COORD end = rend->gamearea_end;
 	COORD pos;
 	int num_blocks = sizeof(blocks) / sizeof(blocks[0]);
-	for (pos.Y = 0; pos.Y < end.Y; pos.Y++) {
+	for (pos.Y = 0; pos.Y < end.Y; pos.Y++)
 		for (pos.X = 0; pos.X < end.X; pos.X++)
 			gamemap[pos.Y][pos.X].block = blocks[random_number(0, num_blocks)];
-			//gamemap[pos.Y][pos.X].block = blocks[rand() % 7] ;
-	}
 }
 
 static void gen_rendarea(Renderer* rend) {

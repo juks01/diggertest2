@@ -110,57 +110,39 @@ static int draw_rendarea(Renderer* rend, HANDLE* hOut) {
 
 
 static void moveplayer(Renderer* rend, Player* plr, HANDLE hOut, int key) {
-	COORD Position = plr->Position;
-	COORD PositionOld = plr->PositionOld;
 	unsigned char marker = "@";
-	//int newpos_x = plr->Position.X, newpos_y = plr->Position.Y;
+	plr->dir = key;
 
 	switch (plr->dir) {
 	case 1: { // Trying to go up
 		if (plr->Position.Y > 2) {
-			plr->PositionOld.Y = plr->Position.Y;
-			/*
-			int* newpos_y = &plr.Position.Y;
-			--(*newpos_y);
-			*/
-			(plr->Position.Y)--;
-			char marker = "^";
+			plr->PositionOld = plr->Position;
+			plr->Position.Y--;
+			marker = "^";
 		}
 		break;
 	}
 	case 2: { // Trying to go right
-		if (plr->Position.X > rend->rendarea_end.X) {
-			plr->PositionOld.X = plr->Position.X;
-			/*
-			int* newpos_x = &plr.Position.X;
-			++(*newpos_x);
-			*/
-			(plr->Position.X)++;
-			char marker = ">";
+		if (plr->Position.X < rend->rendarea_end.X-2) {
+			plr->PositionOld = plr->Position;
+			plr->Position.X++;
+			marker = ">";
 		}
 		break;
 	}
 	case 3: { // Trying to go down
-		if (plr->Position.Y < rend->rendarea_end.Y) {
-			plr->PositionOld.Y = plr->Position.Y;
-			/*
-			int* newpos_y = &plr.Position.Y;
-			++(*newpos_y);
-			*/
+		if (plr->Position.Y < rend->rendarea_end.Y-2) {
+			plr->PositionOld = plr->Position;
 			plr->Position.Y++;
-			char marker = "v";
+			marker = "v";
 		}
 		break;
 	}
 	case 4: { // Trying to go left
-		if (plr->Position.X > 2) {
-			plr->PositionOld.X = plr->Position.X;
-			/*
-			int* newpos_x = &plr.Position.X;
-			--(*newpos_x);
-			*/
+		if (plr->Position.X > 1) {
+			plr->PositionOld = plr->Position;
 			plr->Position.X--;
-			char marker = "<";
+			marker = "<";
 		}
 		break;
 	}
@@ -168,24 +150,16 @@ static void moveplayer(Renderer* rend, Player* plr, HANDLE hOut, int key) {
 	}
 
 	// Update player info
-	//plr.Position.X = newpos_x;
-	//plr.Position.Y = newpos_y;
-	Position.X = plr->Position.X;
-	Position.Y = plr->Position.Y;
-	PositionOld.X = plr->PositionOld.X;
-	PositionOld.Y = plr->PositionOld.Y;
-	//unsigned char* mrk = &marker;
 	plr->marker = marker;
-	//strcpy_s(plr.marker, sizeof(marker), mrk);
 
 	// Print player marker to map
-	SetConsoleCursorPosition(hOut, Position);
+	SetConsoleCursorPosition(hOut, plr->Position);
 	printf("%c", marker);
 
 	// Update character in player old position from map
 	if (!(plr->Position.Y == plr->PositionOld.Y &&
 		plr->Position.X == plr->PositionOld.X)) {
-		SetConsoleCursorPosition(hOut, PositionOld);
+		SetConsoleCursorPosition(hOut, plr->PositionOld);
 		printf("%c", gamemap[plr->PositionOld.Y][plr->PositionOld.X].block.tile);
 	}
 }
@@ -346,7 +320,6 @@ int main(int argc, char* argv[]) {
 
 
 		//input
-		int key = 0;
 		switch (input()) {
 		case 'w': moveplayer(prend, pplr, hOut, 1);  break;
 		case 'a': moveplayer(prend, pplr, hOut, 4);  break;

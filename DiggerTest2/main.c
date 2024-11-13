@@ -98,7 +98,7 @@ static int draw_rendarea(Renderer* rend, HANDLE* hOut) {
 
 
 static void moveplayer(Renderer* rend, Player* plr, HANDLE hOut, int key) {
-	unsigned char marker = "@";
+	unsigned char marker = '@';
 	int posx = plr->Position.X;
 	int posy = plr->Position.Y;
 
@@ -110,7 +110,7 @@ static void moveplayer(Renderer* rend, Player* plr, HANDLE hOut, int key) {
 			gamemap[posy-1][posx].block.type != BL_BLOCKING) {
 			plr->PositionOld = plr->Position;
 			plr->Position.Y--;
-			marker = "^";
+			marker = '^';
 		}
 		break;
 	}
@@ -119,7 +119,7 @@ static void moveplayer(Renderer* rend, Player* plr, HANDLE hOut, int key) {
 			gamemap[posy][posx+1].block.type != BL_BLOCKING) {
 			plr->PositionOld = plr->Position;
 			plr->Position.X++;
-			marker = ">";
+			marker = '>';
 		}
 		break;
 	}
@@ -128,7 +128,7 @@ static void moveplayer(Renderer* rend, Player* plr, HANDLE hOut, int key) {
 			gamemap[posy + 1][posx].block.type != BL_BLOCKING) {
 			plr->PositionOld = plr->Position;
 			plr->Position.Y++;
-			marker = "v";
+			marker = 'v';
 		}
 		break;
 	}
@@ -137,7 +137,7 @@ static void moveplayer(Renderer* rend, Player* plr, HANDLE hOut, int key) {
 			gamemap[posy][posx - 1].block.type != BL_BLOCKING) {
 			plr->PositionOld = plr->Position;
 			plr->Position.X--;
-			marker = "<";
+			marker = '<';
 		}
 		break;
 	}
@@ -151,14 +151,13 @@ static void moveplayer(Renderer* rend, Player* plr, HANDLE hOut, int key) {
 	SetConsoleCursorPosition(hOut, plr->Position);
 	printf("%c", marker);
 
-	// Update character in player old position from map
-
 	// Save current attributes
 	CONSOLE_SCREEN_BUFFER_INFO consoleInfo;
 	WORD saved_attributes;
 	GetConsoleScreenBufferInfo(hOut, &consoleInfo);
 	saved_attributes = consoleInfo.wAttributes;
 
+	// Update character in player old position from map
 	if (!(plr->Position.Y == plr->PositionOld.Y &&
 		plr->Position.X == plr->PositionOld.X)) {
 		SetConsoleCursorPosition(hOut, plr->PositionOld);

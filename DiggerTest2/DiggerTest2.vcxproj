@@ -131,6 +131,7 @@
     <ClCompile Include="tools.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="ansicol.h" />
     <ClInclude Include="main.h" />
     <ClInclude Include="tools.h" />
   </ItemGroup>

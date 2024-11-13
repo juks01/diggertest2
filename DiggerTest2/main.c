@@ -110,11 +110,15 @@ static int draw_rendarea(Renderer* rend, HANDLE* hOut) {
 
 static void moveplayer(Renderer* rend, Player* plr, HANDLE hOut, int key) {
 	unsigned char marker = "@";
+	int posx = plr->Position.X;
+	int posy = plr->Position.Y;
+
 	plr->dir = key;
 
 	switch (plr->dir) {
 	case 1: { // Trying to go up
-		if (plr->Position.Y > 2) {
+		if (posy > 2 &&
+			gamemap[posy-1][posx].block.type != BL_BLOCKING) {
 			plr->PositionOld = plr->Position;
 			plr->Position.Y--;
 			marker = "^";
@@ -122,7 +126,8 @@ static void moveplayer(Renderer* rend, Player* plr, HANDLE hOut, int key) {
 		break;
 	}
 	case 2: { // Trying to go right
-		if (plr->Position.X < rend->rendarea_end.X-2) {
+		if (posx < rend->rendarea_end.X-2 &&
+			gamemap[posy][posx+1].block.type != BL_BLOCKING) {
 			plr->PositionOld = plr->Position;
 			plr->Position.X++;
 			marker = ">";
@@ -130,7 +135,8 @@ static void moveplayer(Renderer* rend, Player* plr, HANDLE hOut, int key) {
 		break;
 	}
 	case 3: { // Trying to go down
-		if (plr->Position.Y < rend->rendarea_end.Y-2) {
+		if (posy < rend->rendarea_end.Y-2 &&
+			gamemap[posy + 1][posx].block.type != BL_BLOCKING) {
 			plr->PositionOld = plr->Position;
 			plr->Position.Y++;
 			marker = "v";
@@ -138,7 +144,8 @@ static void moveplayer(Renderer* rend, Player* plr, HANDLE hOut, int key) {
 		break;
 	}
 	case 4: { // Trying to go left
-		if (plr->Position.X > 1) {
+		if (posx > 1 &&
+			gamemap[posy][posx - 1].block.type != BL_BLOCKING) {
 			plr->PositionOld = plr->Position;
 			plr->Position.X--;
 			marker = "<";

@@ -7,6 +7,11 @@
 #else
 #include <unistd.h> // for usleep
 #include <ncurses.h> // for cursot positioning etc
+typedef short SHORT;
+typedef struct _COORD {
+	SHORT X;
+	SHORT Y;
+} COORD, * PCOORD;
 #endif
 
 #define SYS_CYCLES 20

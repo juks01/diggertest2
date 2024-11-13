@@ -1,7 +1,6 @@
 #pragma once
 
 #include <time.h>
-#include <conio.h>
 #include <stdio.h>
 
 #ifdef _WIN32

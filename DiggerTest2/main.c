@@ -1,6 +1,5 @@
 #include "main.h"
 #include "tools.h"
-#include <conio.h>
 #include <stdio.h>
 #include <time.h>
 

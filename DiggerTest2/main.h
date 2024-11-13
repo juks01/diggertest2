@@ -1,6 +1,13 @@
 #pragma once
 
+#ifdef _WIN32
 #include <windows.h>
+#elif _POSIX_C_SOURCE >= 199309L
+#include <time.h>   // for nanosleep
+#else
+#include <unistd.h> // for usleep
+#include <ncurses.h> // for cursot positioning etc
+#endif
 
 #define SYS_CYCLES 20
 #define SYS_DEBUG 1

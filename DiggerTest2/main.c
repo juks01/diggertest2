@@ -59,29 +59,18 @@ static void gen_rendarea(Renderer* rend) {
 static int draw_gamearea(Renderer* rend, HANDLE* hOut) {
 	COORD end = rend->rendarea_end;
 
+	// Save current attributes
 	CONSOLE_SCREEN_BUFFER_INFO consoleInfo;
 	WORD saved_attributes;
-	// Save current attributes
 	GetConsoleScreenBufferInfo(hOut, &consoleInfo);
 	saved_attributes = consoleInfo.wAttributes;
-	// TODOOOO: gamemap pos 0,0 but real (rendmap) pos xx,yy.
+
 	COORD pos;
 	for (pos.Y = 2; pos.Y < end.Y-1; pos.Y++) {
 		for (pos.X = 1; pos.X < end.X-1; pos.X++) {
 			SetConsoleCursorPosition(hOut, pos);
-			// Draw grass characters in green
-			if (gamemap[pos.Y][pos.X].block.tile == CHAR_GRASS) {
-				SetConsoleTextAttribute(hOut, FOREGROUND_GREEN);
-				printf("%c", gamemap[pos.Y][pos.X].block.tile);
-			}
-			// Draw blocking characters in white
-			else if (gamemap[pos.Y][pos.X].block.type == BL_BLOCKING) {
-				SetConsoleTextAttribute(hOut, FOREGROUND_INTENSITY);
-				printf("%c", gamemap[pos.Y][pos.X].block.tile);
-			}
-			// Draw other characters in grey
-			else
-				printf("%c", gamemap[pos.Y][pos.X].block.tile);
+			SetConsoleTextAttribute(hOut, gamemap[pos.Y][pos.X].block.color);
+			printf("%c", gamemap[pos.Y][pos.X].block.tile);
 			SetConsoleTextAttribute(hOut, saved_attributes);
 		}
 	}
@@ -163,10 +152,19 @@ static void moveplayer(Renderer* rend, Player* plr, HANDLE hOut, int key) {
 	printf("%c", marker);
 
 	// Update character in player old position from map
+
+	// Save current attributes
+	CONSOLE_SCREEN_BUFFER_INFO consoleInfo;
+	WORD saved_attributes;
+	GetConsoleScreenBufferInfo(hOut, &consoleInfo);
+	saved_attributes = consoleInfo.wAttributes;
+
 	if (!(plr->Position.Y == plr->PositionOld.Y &&
 		plr->Position.X == plr->PositionOld.X)) {
 		SetConsoleCursorPosition(hOut, plr->PositionOld);
+		SetConsoleTextAttribute(hOut, gamemap[plr->PositionOld.Y][plr->PositionOld.X].block.color);
 		printf("%c", gamemap[plr->PositionOld.Y][plr->PositionOld.X].block.tile);
+		SetConsoleTextAttribute(hOut, saved_attributes);
 	}
 }
 

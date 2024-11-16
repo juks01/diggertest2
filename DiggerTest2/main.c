@@ -20,47 +20,42 @@ static void gen_rendarea(Renderer* rend) {
 	COORD pos;
 	unsigned char header[REN_COLS] = "---=== HEADER ROW ===---";
 
-	for (pos.Y = 0; pos.Y < end.Y; pos.Y++) {
+	for (pos.Y = 0; pos.Y < end.Y; pos.Y++)
 		for (pos.X = 0; pos.X < end.X; pos.X++)
 			// == Header row
 			if (pos.Y == 0)
 				rendmap[pos.Y][pos.X].block.tile = header[pos.X];
 
 			// == First row of gamearea "box"
-			else if (pos.Y == start.Y) {
+			else if (pos.Y == start.Y)
 				if (pos.X == start.X)        // Upper left corner
 					rendmap[pos.Y][pos.X].block = walls[0];
 				else if (pos.X == end.X - 1) // Upper right corner
 					rendmap[pos.Y][pos.X].block = walls[1];
 				else                     // Upper center characters
 					rendmap[pos.Y][pos.X].block = walls[2];
-			}
 			// == Last row of gamearea "box"
-			else if (pos.Y == end.Y - 1) {
+			else if (pos.Y == end.Y - 1)
 				if (pos.X == start.X)        // Lower left corner
 					rendmap[pos.Y][pos.X].block = walls[3];
 				else if (pos.X == end.X - 1) // Lower right corner
 					rendmap[pos.Y][pos.X].block = walls[4];
 				else                     // Lower center characters
 					rendmap[pos.Y][pos.X].block = walls[5];
-			}
 			// == Rows in the middle
-			else {                       
+			else
 				if (pos.X == start.X)        // First column
 					rendmap[pos.Y][pos.X].block = walls[6];
 				else if (pos.X == end.X - 1) // Last column
 					rendmap[pos.Y][pos.X].block = walls[7];
-				else // Game area between borders - leave empty for real gamemap
+				else // Game area between borders
 					rendmap[pos.Y][pos.X].block = blocks[0];
-			}
-	}
 }
 
 static int draw_gamearea(Renderer* rend, HANDLE* hOut) {
 	COORD start = rend->rendarea_start;
 	COORD end = rend->rendarea_end;
 	COORD cur = rend->gamearea_current_start;
-	COORD new;
 	int newY, newX;
 
 	// Save current attributes
@@ -72,14 +67,19 @@ static int draw_gamearea(Renderer* rend, HANDLE* hOut) {
 	COORD pos;
 	for (pos.Y = start.Y+1; pos.Y < end.Y-1; pos.Y++) {
 		newY = cur.Y + pos.Y;
-		for (pos.X = start.X+1; pos.X < end.X-1; pos.X++) {
+		for (pos.X = start.X + 1; pos.X < end.X - 1; pos.X++) {
 			newX = cur.X + pos.X;
-			new.Y = newY;
-			new.X = newX;
 			SetConsoleCursorPosition(hOut, pos);
-			SetConsoleTextAttribute(hOut, gamemap[new.Y][new.X].block.color);
-			printf("%c", gamemap[new.Y][new.X].block.tile);
-			SetConsoleTextAttribute(hOut, saved_attributes);
+			if (newY > G_AREA_ROWS || newX > G_AREA_COLS) {
+				SetConsoleTextAttribute(hOut, FOREGROUND_INTENSITY);
+				printf("%c", CHAR_SOLID);
+				SetConsoleTextAttribute(hOut, saved_attributes);
+			}
+			else {
+				SetConsoleTextAttribute(hOut, gamemap[newY][newX].block.color);
+				printf("%c", gamemap[newY][newX].block.tile);
+				SetConsoleTextAttribute(hOut, saved_attributes);
+			}
 		}
 	}
 	return 0;
@@ -107,8 +107,14 @@ static int draw_rendarea(Renderer* rend, HANDLE* hOut) {
 
 static void moveplayer(Renderer* rend, Player* plr, HANDLE hOut, int key) {
 	unsigned char marker = '@';
+
+	COORD cur = rend->gamearea_current_start;
+
 	int posx = plr->Position.X;
 	int posy = plr->Position.Y;
+	int relX = cur.X + plr->Position.X;
+	int relY = cur.Y + plr->Position.Y;
+
 	int ret = 0; // Return of draw gamearea function
 
 	plr->dir = key;
@@ -124,8 +130,8 @@ static void moveplayer(Renderer* rend, Player* plr, HANDLE hOut, int key) {
 		break;
 	}
 	case 2: { // Trying to go right
-		if (posx < G_AREA_COLS &&
-			gamemap[posy][posx + 1].block.type != BL_BLOCKING) {
+		if (relX < G_AREA_COLS &&
+			gamemap[relY][relX + 1].block.type != BL_BLOCKING) {
 			if (posx > rend->rendarea_end.X - 3) {
 				rend->gamearea_current_start.X += REN_COLS;
 				ret = draw_gamearea(rend, hOut);
@@ -178,13 +184,12 @@ static void moveplayer(Renderer* rend, Player* plr, HANDLE hOut, int key) {
 	// Update character in player old position from map
 	if (!(plr->Position.Y == plr->PositionOld.Y &&
 		plr->Position.X == plr->PositionOld.X)) {
-
+		COORD relOld;
+		relOld.Y = cur.Y + plr->PositionOld.Y;
+		relOld.X = cur.X + plr->PositionOld.X;
 		SetConsoleCursorPosition(hOut, plr->PositionOld);
-
-		SetConsoleTextAttribute(hOut, gamemap[plr->PositionOld.Y][plr->PositionOld.X].block.color);
-
-		printf("%c", gamemap[plr->PositionOld.Y][plr->PositionOld.X].block.tile);
-
+		SetConsoleTextAttribute(hOut, gamemap[relOld.Y][relOld.X].block.color);
+		printf("%c", gamemap[relOld.Y][relOld.X].block.tile);
 		SetConsoleTextAttribute(hOut, saved_attributes);
 	}
 }

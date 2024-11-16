@@ -35,6 +35,7 @@ typedef struct _COORD {
 #define CHAR_HEY 177
 #define CHAR_HEY_HIGH 178
 #define CHAR_ROCK 254
+#define CHAR_SOLID 219
 #define CHAR_FRAME_UL 218   // Frame char of upper left corner
 #define CHAR_FRAME_UR 183   // Frame char of upper right corner
 #define CHAR_FRAME_UC 196   // Frame char of upper horizontal line
@@ -78,6 +79,7 @@ Block blocks[] = {
 	{ CHAR_HEY, BL_SLOWING, FOREGROUND_GREEN },
 	{ CHAR_HEY_HIGH, BL_SLOWING, FOREGROUND_GREEN },
 	{ CHAR_ROCK, BL_BLOCKING, FOREGROUND_INTENSITY },
+	{ CHAR_SOLID, BL_BLOCKING, FOREGROUND_INTENSITY }
 };
 
 /* Wall chars

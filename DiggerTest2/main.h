@@ -149,6 +149,7 @@ typedef struct renderer {
 	COORD header_end;
 	COORD gamearea_start;
 	COORD gamearea_end;
+	COORD gamearea_current_start;
 	COORD statsarea_start;
 	COORD statsarea_end;
 	char upd_rendarea;

@@ -57,7 +57,11 @@ static void gen_rendarea(Renderer* rend) {
 }
 
 static int draw_gamearea(Renderer* rend, HANDLE* hOut) {
+	COORD start = rend->rendarea_start;
 	COORD end = rend->rendarea_end;
+	COORD cur = rend->gamearea_current_start;
+	COORD new;
+	int newY, newX;
 
 	// Save current attributes
 	CONSOLE_SCREEN_BUFFER_INFO consoleInfo;
@@ -66,11 +70,15 @@ static int draw_gamearea(Renderer* rend, HANDLE* hOut) {
 	saved_attributes = consoleInfo.wAttributes;
 
 	COORD pos;
-	for (pos.Y = 2; pos.Y < end.Y-1; pos.Y++) {
-		for (pos.X = 1; pos.X < end.X-1; pos.X++) {
+	for (pos.Y = start.Y+1; pos.Y < end.Y-1; pos.Y++) {
+		newY = cur.Y + pos.Y;
+		for (pos.X = start.X+1; pos.X < end.X-1; pos.X++) {
+			newX = cur.X + pos.X;
+			new.Y = newY;
+			new.X = newX;
 			SetConsoleCursorPosition(hOut, pos);
-			SetConsoleTextAttribute(hOut, gamemap[pos.Y][pos.X].block.color);
-			printf("%c", gamemap[pos.Y][pos.X].block.tile);
+			SetConsoleTextAttribute(hOut, gamemap[new.Y][new.X].block.color);
+			printf("%c", gamemap[new.Y][new.X].block.tile);
 			SetConsoleTextAttribute(hOut, saved_attributes);
 		}
 	}
@@ -101,6 +109,7 @@ static void moveplayer(Renderer* rend, Player* plr, HANDLE hOut, int key) {
 	unsigned char marker = '@';
 	int posx = plr->Position.X;
 	int posy = plr->Position.Y;
+	int ret = 0; // Return of draw gamearea function
 
 	plr->dir = key;
 
@@ -115,11 +124,20 @@ static void moveplayer(Renderer* rend, Player* plr, HANDLE hOut, int key) {
 		break;
 	}
 	case 2: { // Trying to go right
-		if (posx < rend->rendarea_end.X-2 &&
-			gamemap[posy][posx+1].block.type != BL_BLOCKING) {
-			plr->PositionOld = plr->Position;
-			plr->Position.X++;
-			marker = '>';
+		if (posx < G_AREA_COLS &&
+			gamemap[posy][posx + 1].block.type != BL_BLOCKING) {
+			if (posx > rend->rendarea_end.X - 3) {
+				rend->gamearea_current_start.X += REN_COLS;
+				ret = draw_gamearea(rend, hOut);
+				plr->Position.X = 1;
+				plr->PositionOld = plr->Position;
+				marker = '>';
+			}
+			else {
+				plr->PositionOld = plr->Position;
+				plr->Position.X++;
+				marker = '>';
+			}
 		}
 		break;
 	}
@@ -160,9 +178,13 @@ static void moveplayer(Renderer* rend, Player* plr, HANDLE hOut, int key) {
 	// Update character in player old position from map
 	if (!(plr->Position.Y == plr->PositionOld.Y &&
 		plr->Position.X == plr->PositionOld.X)) {
+
 		SetConsoleCursorPosition(hOut, plr->PositionOld);
+
 		SetConsoleTextAttribute(hOut, gamemap[plr->PositionOld.Y][plr->PositionOld.X].block.color);
+
 		printf("%c", gamemap[plr->PositionOld.Y][plr->PositionOld.X].block.tile);
+
 		SetConsoleTextAttribute(hOut, saved_attributes);
 	}
 }
@@ -188,6 +210,8 @@ static int init(System* sys, Renderer* rend, Player* plr, HANDLE* hOut) {
 	rend->gamearea_start.Y = 2;
 	rend->gamearea_end.X = G_AREA_COLS;
 	rend->gamearea_end.Y = G_AREA_ROWS;
+	rend->gamearea_current_start.X = 0;
+	rend->gamearea_current_start.Y = 0;
 	rend->statsarea_start.X = 0;
 	rend->statsarea_start.Y = REN_HEADER_ROWS + REN_ROWS;
 	rend->statsarea_end.X = REN_COLS;
@@ -199,7 +223,7 @@ static int init(System* sys, Renderer* rend, Player* plr, HANDLE* hOut) {
 	plr->name = "Player";
 	plr->marker = "@";
 	plr->dir = 9;
-	plr->Position.X = 10;
+	plr->Position.X = 70;
 	plr->Position.Y = 10;
 	plr->PositionOld = plr->Position;
 	plr->level = 1;

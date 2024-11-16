@@ -106,9 +106,8 @@ static int draw_rendarea(Renderer* rend, HANDLE* hOut) {
 
 
 static void moveplayer(Renderer* rend, Player* plr, HANDLE hOut, int key) {
-	unsigned char marker = '@';
-
 	COORD cur = rend->gamearea_current_start;
+	unsigned char marker = '@';
 
 	int posx = plr->Position.X;
 	int posy = plr->Position.Y;
@@ -121,11 +120,20 @@ static void moveplayer(Renderer* rend, Player* plr, HANDLE hOut, int key) {
 
 	switch (plr->dir) {
 	case 1: { // Trying to go up
-		if (posy > 2 &&
-			gamemap[posy-1][posx].block.type != BL_BLOCKING) {
-			plr->PositionOld = plr->Position;
-			plr->Position.Y--;
-			marker = '^';
+		if (relY > 2 &&
+			gamemap[relY-1][relX].block.type != BL_BLOCKING) {
+			if (posy < 3) {
+				rend->gamearea_current_start.Y -= REN_ROWS;
+				ret = draw_gamearea(rend, hOut);
+				plr->Position.Y = REN_ROWS-1;
+				plr->PositionOld = plr->Position;
+				marker = '^';
+			}
+			else {
+				plr->PositionOld = plr->Position;
+				plr->Position.Y--;
+				marker = '^';
+			}
 		}
 		break;
 	}
@@ -133,6 +141,7 @@ static void moveplayer(Renderer* rend, Player* plr, HANDLE hOut, int key) {
 		if (relX < G_AREA_COLS &&
 			gamemap[relY][relX + 1].block.type != BL_BLOCKING) {
 			if (posx > rend->rendarea_end.X - 3) {
+				// Add: && if there is more map on right
 				rend->gamearea_current_start.X += REN_COLS;
 				ret = draw_gamearea(rend, hOut);
 				plr->Position.X = 1;
@@ -148,20 +157,39 @@ static void moveplayer(Renderer* rend, Player* plr, HANDLE hOut, int key) {
 		break;
 	}
 	case 3: { // Trying to go down
-		if (posy < rend->rendarea_end.Y-2 &&
-			gamemap[posy + 1][posx].block.type != BL_BLOCKING) {
-			plr->PositionOld = plr->Position;
-			plr->Position.Y++;
-			marker = 'v';
+		if (relY < G_AREA_ROWS &&
+			gamemap[relY + 1][relX].block.type != BL_BLOCKING) {
+			if (posy > rend->rendarea_end.Y - 3) {
+				rend->gamearea_current_start.Y += REN_ROWS;
+				ret = draw_gamearea(rend, hOut);
+				plr->Position.Y = 2;
+				plr->PositionOld = plr->Position;
+				marker = 'v';
+			}
+			else {
+				plr->PositionOld = plr->Position;
+				plr->Position.Y++;
+				marker = 'v';
+			}
 		}
 		break;
 	}
 	case 4: { // Trying to go left
-		if (posx > 1 &&
-			gamemap[posy][posx - 1].block.type != BL_BLOCKING) {
-			plr->PositionOld = plr->Position;
-			plr->Position.X--;
-			marker = '<';
+		if (relX > 1 &&
+			gamemap[relY][relX - 1].block.type != BL_BLOCKING) {
+			if (posx < 2) {
+				// && if there is more map on left
+				rend->gamearea_current_start.X -= REN_COLS;
+				ret = draw_gamearea(rend, hOut);
+				plr->Position.X = REN_COLS - 2;
+				plr->PositionOld = plr->Position;
+				marker = '<';
+			}
+			else {
+				plr->PositionOld = plr->Position;
+				plr->Position.X--;
+				marker = '<';
+			}
 		}
 		break;
 	}
@@ -285,7 +313,10 @@ void draw_debug(System* sys, Renderer* rend, Map* map, Player* plr, HANDLE hOut)
 	posD3.Y = REN_ROWS + 2;
 	posD3.X = 49;
 	SetConsoleCursorPosition(hOut, posD1);
-	printf("Pos: %d.%d", plr->Position.Y, plr->Position.X);
+	int relY = rend->gamearea_current_start.Y + plr->Position.Y;
+	int relX = rend->gamearea_current_start.X + plr->Position.X;
+	printf("ScrPos: %03d.%03d   GamPos: %03d.%03d   "
+		, plr->Position.Y, plr->Position.X, relY, relX);
 }
 
 

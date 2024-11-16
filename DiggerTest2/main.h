@@ -37,9 +37,11 @@ typedef struct _COORD {
 #define CHAR_ROCK 254
 #define CHAR_SOLID 219
 #define CHAR_FRAME_UL 218   // Frame char of upper left corner
-#define CHAR_FRAME_UR 183   // Frame char of upper right corner
+//#define CHAR_FRAME_UR 183   // Frame char of upper right corner
+#define CHAR_FRAME_UR 44   // Frame char of upper right corner
 #define CHAR_FRAME_UC 196   // Frame char of upper horizontal line
-#define CHAR_FRAME_LL 212   // Frame char of lower left corner
+//#define CHAR_FRAME_LL 212   // Frame char of lower left corner
+#define CHAR_FRAME_LL 96   // Frame char of lower left corner
 #define CHAR_FRAME_LR 188   // Frame char of lower right corner
 #define CHAR_FRAME_LC 205   // Frame char of lower horizontal line
 #define CHAR_FRAME_L  179   // Frame char of left vertical line

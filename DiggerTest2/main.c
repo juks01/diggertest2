@@ -5,10 +5,9 @@
 
 
 static void gen_gamearea(Renderer* rend) {
-	COORD start = rend->gamearea_start;
 	COORD end = rend->gamearea_end;
 	COORD pos;
-	int num_blocks = sizeof(blocks) / sizeof(blocks[0]);
+	int num_blocks = (sizeof(blocks) / sizeof(blocks[0])) - 2;
 	for (pos.Y = 0; pos.Y < end.Y; pos.Y++)
 		for (pos.X = 0; pos.X < end.X; pos.X++)
 			gamemap[pos.Y][pos.X].block = blocks[random_number(0, num_blocks)];
@@ -60,9 +59,8 @@ static int draw_gamearea(Renderer* rend, HANDLE* hOut) {
 
 	// Save current attributes
 	CONSOLE_SCREEN_BUFFER_INFO consoleInfo;
-	WORD saved_attributes;
 	GetConsoleScreenBufferInfo(hOut, &consoleInfo);
-	saved_attributes = consoleInfo.wAttributes;
+	WORD saved_attributes = consoleInfo.wAttributes;
 
 	COORD pos;
 	for (pos.Y = start.Y+1; pos.Y < end.Y-1; pos.Y++) {
@@ -70,14 +68,12 @@ static int draw_gamearea(Renderer* rend, HANDLE* hOut) {
 		for (pos.X = start.X + 1; pos.X < end.X - 1; pos.X++) {
 			newX = cur.X + pos.X;
 			SetConsoleCursorPosition(hOut, pos);
-			if (newY > G_AREA_ROWS || newX > G_AREA_COLS) {
-				SetConsoleTextAttribute(hOut, FOREGROUND_INTENSITY);
+			if (newY > G_AREA_ROWS || newX > G_AREA_COLS)
 				printf("%c", CHAR_SOLID);
-				SetConsoleTextAttribute(hOut, saved_attributes);
-			}
 			else {
-				SetConsoleTextAttribute(hOut, gamemap[newY][newX].block.color);
-				printf("%c", gamemap[newY][newX].block.tile);
+				Block bl = gamemap[newY][newX].block;
+				SetConsoleTextAttribute(hOut, bl.color);
+				printf("%c", bl.tile);
 				SetConsoleTextAttribute(hOut, saved_attributes);
 			}
 		}
@@ -205,9 +201,8 @@ static void moveplayer(Renderer* rend, Player* plr, HANDLE hOut, int key) {
 
 	// Save current attributes
 	CONSOLE_SCREEN_BUFFER_INFO consoleInfo;
-	WORD saved_attributes;
 	GetConsoleScreenBufferInfo(hOut, &consoleInfo);
-	saved_attributes = consoleInfo.wAttributes;
+	WORD saved_attributes = consoleInfo.wAttributes;
 
 	// Update character in player old position from map
 	if (!(plr->Position.Y == plr->PositionOld.Y &&
@@ -234,7 +229,7 @@ static int init(System* sys, Renderer* rend, Player* plr, HANDLE* hOut) {
 	rend->rendarea_start.X = 0;
 	rend->rendarea_start.Y = REN_HEADER_ROWS;
 	rend->rendarea_end.X = REN_COLS;
-	rend->rendarea_end.Y = REN_HEADER_ROWS + REN_ROWS;
+	rend->rendarea_end.Y = REN_ROWS;
 	rend->header_start.X = 0;
 	rend->header_start.Y = 0;
 	rend->header_end.X = REN_COLS;
@@ -312,11 +307,13 @@ void draw_debug(System* sys, Renderer* rend, Map* map, Player* plr, HANDLE hOut)
 	posD2.X = 49;
 	posD3.Y = REN_ROWS + 2;
 	posD3.X = 49;
-	SetConsoleCursorPosition(hOut, posD1);
 	int relY = rend->gamearea_current_start.Y + plr->Position.Y;
 	int relX = rend->gamearea_current_start.X + plr->Position.X;
-	printf("ScrPos: %03d.%03d   GamPos: %03d.%03d   "
-		, plr->Position.Y, plr->Position.X, relY, relX);
+	int chr = gamemap[relY][relX].block.tile;
+
+	SetConsoleCursorPosition(hOut, posD1);
+	printf("ScrPos:%03d.%03d  GamPos:%03d.%03d  Ch:%03d"
+		, plr->Position.Y, plr->Position.X, relY, relX, chr);
 }
 
 
@@ -373,8 +370,9 @@ int main(int argc, char* argv[]) {
 
 
 	// THE MAIN LOOP
+	char key = '0';
 	int cycles = 0;
-	while (1) {
+	while (key != 'q') {
 		sleep_ms(SYS_CYCLES);
 		if (cycles < 5000)
 			cycles++;
@@ -383,12 +381,12 @@ int main(int argc, char* argv[]) {
 
 
 		//input
-		switch (input()) {
+		switch (key = input()) {
 		case 'w': moveplayer(prend, pplr, hOut, 1);  break;
 		case 'a': moveplayer(prend, pplr, hOut, 4);  break;
 		case 's': moveplayer(prend, pplr, hOut, 3);  break;
 		case 'd': moveplayer(prend, pplr, hOut, 2);  break;
-		case 'q': exit(0); break;
+		case 'q': break;
 		
 		// Just for testing...
 		case 'k':

@@ -22,20 +22,21 @@ typedef struct _COORD {
 #define REN_ROWS 22
 #define REN_COLS 78
 
-#define G_AREA_ROWS 40
+#define G_AREA_ROWS 34
 #define G_AREA_COLS 120
 
 #define BL_WALKABLE 1
 #define BL_SLOWING 2
 #define BL_BLOCKING 4
 
-#define CHAR_EMPTY 32
-#define CHAR_GRASS 44
+#define CHAR_EMPTY 32 // Space character
+#define CHAR_GRASS 44 // Comma character
 #define CHAR_HEY_LOW 176
 #define CHAR_HEY 177
 #define CHAR_HEY_HIGH 178
 #define CHAR_ROCK 254
 #define CHAR_SOLID 219
+#define CHAR_DEBUG 90 // Letter Z
 #define CHAR_FRAME_UL 218   // Frame char of upper left corner
 //#define CHAR_FRAME_UR 183   // Frame char of upper right corner
 #define CHAR_FRAME_UR 44   // Frame char of upper right corner
@@ -64,6 +65,8 @@ typedef struct block {
 } Block;
 
 Block blocks[] = {
+	{ CHAR_SOLID, BL_BLOCKING, FOREGROUND_INTENSITY },
+	{ CHAR_DEBUG, BL_WALKABLE, FOREGROUND_RED },
 	{ CHAR_EMPTY, BL_WALKABLE, 0x0 },
 	{ CHAR_EMPTY, BL_WALKABLE, 0x0 },
 	{ CHAR_EMPTY, BL_WALKABLE, 0x0 },
@@ -81,7 +84,6 @@ Block blocks[] = {
 	{ CHAR_HEY, BL_SLOWING, FOREGROUND_GREEN },
 	{ CHAR_HEY_HIGH, BL_SLOWING, FOREGROUND_GREEN },
 	{ CHAR_ROCK, BL_BLOCKING, FOREGROUND_INTENSITY },
-	{ CHAR_SOLID, BL_BLOCKING, FOREGROUND_INTENSITY }
 };
 
 /* Wall chars

@@ -7,10 +7,10 @@
 static void gen_gamearea(Renderer* rend) {
 	COORD end = rend->gamearea_end;
 	COORD pos;
-	int num_blocks = (sizeof(blocks) / sizeof(blocks[0])) - 2;
+	int num_blocks = (sizeof(blocks) / sizeof(blocks[0])) - 1;
 	for (pos.Y = 0; pos.Y < end.Y; pos.Y++)
 		for (pos.X = 0; pos.X < end.X; pos.X++)
-			gamemap[pos.Y][pos.X].block = blocks[random_number(0, num_blocks)];
+			gamemap[pos.Y][pos.X].block = blocks[random_number(2, num_blocks)];
 }
 
 static void gen_rendarea(Renderer* rend) {
@@ -47,8 +47,9 @@ static void gen_rendarea(Renderer* rend) {
 					rendmap[pos.Y][pos.X].block = walls[6];
 				else if (pos.X == end.X - 1) // Last column
 					rendmap[pos.Y][pos.X].block = walls[7];
+	// Game area should be drawn with draw_gamearea. This 'else' can be removed when sure.
 				else // Game area between borders
-					rendmap[pos.Y][pos.X].block = blocks[0];
+					rendmap[pos.Y][pos.X].block = blocks[18];
 }
 
 static int draw_gamearea(Renderer* rend, HANDLE* hOut) {
@@ -63,7 +64,7 @@ static int draw_gamearea(Renderer* rend, HANDLE* hOut) {
 	WORD saved_attributes = consoleInfo.wAttributes;
 
 	COORD pos;
-	for (pos.Y = start.Y+1; pos.Y < end.Y-1; pos.Y++) {
+	for (pos.Y = start.Y + 1; pos.Y < end.Y - 1; pos.Y++) {
 		newY = cur.Y + pos.Y;
 		for (pos.X = start.X + 1; pos.X < end.X - 1; pos.X++) {
 			newX = cur.X + pos.X;
@@ -119,9 +120,9 @@ static void moveplayer(Renderer* rend, Player* plr, HANDLE hOut, int key) {
 		if (relY > 2 &&
 			gamemap[relY-1][relX].block.type != BL_BLOCKING) {
 			if (posy < 3) {
-				rend->gamearea_current_start.Y -= REN_ROWS;
+				rend->gamearea_current_start.Y -= REN_ROWS-3;
 				ret = draw_gamearea(rend, hOut);
-				plr->Position.Y = REN_ROWS-1;
+				plr->Position.Y = REN_ROWS-2;
 				plr->PositionOld = plr->Position;
 				marker = '^';
 			}
@@ -138,7 +139,7 @@ static void moveplayer(Renderer* rend, Player* plr, HANDLE hOut, int key) {
 			gamemap[relY][relX + 1].block.type != BL_BLOCKING) {
 			if (posx > rend->rendarea_end.X - 3) {
 				// Add: && if there is more map on right
-				rend->gamearea_current_start.X += REN_COLS;
+				rend->gamearea_current_start.X += REN_COLS-2;
 				ret = draw_gamearea(rend, hOut);
 				plr->Position.X = 1;
 				plr->PositionOld = plr->Position;
@@ -156,7 +157,7 @@ static void moveplayer(Renderer* rend, Player* plr, HANDLE hOut, int key) {
 		if (relY < G_AREA_ROWS &&
 			gamemap[relY + 1][relX].block.type != BL_BLOCKING) {
 			if (posy > rend->rendarea_end.Y - 3) {
-				rend->gamearea_current_start.Y += REN_ROWS;
+				rend->gamearea_current_start.Y += REN_ROWS-3;
 				ret = draw_gamearea(rend, hOut);
 				plr->Position.Y = 2;
 				plr->PositionOld = plr->Position;
@@ -175,7 +176,7 @@ static void moveplayer(Renderer* rend, Player* plr, HANDLE hOut, int key) {
 			gamemap[relY][relX - 1].block.type != BL_BLOCKING) {
 			if (posx < 2) {
 				// && if there is more map on left
-				rend->gamearea_current_start.X -= REN_COLS;
+				rend->gamearea_current_start.X -= REN_COLS-2;
 				ret = draw_gamearea(rend, hOut);
 				plr->Position.X = REN_COLS - 2;
 				plr->PositionOld = plr->Position;
@@ -234,8 +235,8 @@ static int init(System* sys, Renderer* rend, Player* plr, HANDLE* hOut) {
 	rend->header_start.Y = 0;
 	rend->header_end.X = REN_COLS;
 	rend->header_end.Y = REN_HEADER_ROWS;
-	rend->gamearea_start.X = 2;
-	rend->gamearea_start.Y = 2;
+	rend->gamearea_start.X = 0;
+	rend->gamearea_start.Y = 0;
 	rend->gamearea_end.X = G_AREA_COLS;
 	rend->gamearea_end.Y = G_AREA_ROWS;
 	rend->gamearea_current_start.X = 0;
@@ -307,8 +308,8 @@ void draw_debug(System* sys, Renderer* rend, Map* map, Player* plr, HANDLE hOut)
 	posD2.X = 49;
 	posD3.Y = REN_ROWS + 2;
 	posD3.X = 49;
-	int relY = rend->gamearea_current_start.Y + plr->Position.Y;
-	int relX = rend->gamearea_current_start.X + plr->Position.X;
+	int relY = rend->gamearea_current_start.Y + plr->Position.Y-2;
+	int relX = rend->gamearea_current_start.X + plr->Position.X-1;
 	int chr = gamemap[relY][relX].block.tile;
 
 	SetConsoleCursorPosition(hOut, posD1);
